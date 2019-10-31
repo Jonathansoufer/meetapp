@@ -1,112 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { withNavigationFocus } from 'react-navigation';
+import React, { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { format, parseISO } from 'date-fns';
-import { ActivityIndicator } from 'react-native';
 import pt from 'date-fns/locale/pt';
-import PropTypes from 'prop-types';
-
-import { showMessage } from 'react-native-flash-message';
-
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
-import Background from '~/components/Background';
-import MeetUpCard from '~/components/MeetUpCard';
-import EmptySubscriptionList from './components/EmptySubscriptionsList';
-
-import { Container, MeetUpsList, LoaderContainer } from './styles';
-
 import api from '~/services/api';
+import Background from '~/components/Background';
+import Meetup from '~/components/Meetup';
+import Header from '~/components/Header';
+import { Container, List } from './styles';
 
 Icon.loadFont();
 
-function Subscriptions({ isFocused }) {
-  const [meetups, setMeetups] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function Subscriptions({ navigation }) {
+  const [subscriptions, setSubscriptions] = useState([]);
 
   useEffect(() => {
-    async function getSubscribedMeetups() {
-      setIsLoading(true);
+    async function loadSubscriptions() {
       const response = await api.get('subscriptions');
-
-      const subscribedMeetups = response.data.map(sub => ({
-        ...sub.meetup,
-        formattedDate: format(
-          parseISO(sub.meetup.date_time),
-          "d 'de' MMMM 'de' yyyy 'às' HH:mm",
-          { locale: pt }
+      const data = response.data.map(subs => ({
+        ...subs,
+        formatedDate: format(
+          parseISO(subs.date),
+          "dd 'de' MMMMMMMMM', às' H:mm'h'",
+          {
+            locale: pt,
+          }
         ),
       }));
-
-      setMeetups(subscribedMeetups);
-      setIsLoading(false);
+      setSubscriptions(data);
     }
+    loadSubscriptions();
+    navigation.addListener('didFocus', () => {
+      loadSubscriptions();
+    });
+  }, [navigation]);
 
-    if (isFocused) {
-      getSubscribedMeetups();
-    }
-  }, [isFocused]); //eslint-disable-line
-
-  async function handleCancelClick({ id, title }) {
+  async function handleCancellation(id) {
     try {
-      await api.delete('subscriptions', {
-        params: { meetUpId: id },
-      });
-
-      setMeetups(meetups.filter(meetup => meetup.id !== id));
-
-      showMessage({
-        message: `Your subscription to the meetup ${title} has been canceled.`,
-        type: 'success',
-      });
+      await api.delete(`subscriptions/${id}`);
+      navigation.navigate('Dashboard');
     } catch (err) {
-      showMessage({
-        message: 'Action Failed. Please try again later.',
-        type: 'danger',
-      });
+      Alert.alert('Erro...', err.response.data.error);
     }
-  }
-
-  function renderSubscriptions() {
-    if (isLoading) {
-      return (
-        <LoaderContainer>
-          <ActivityIndicator size="large" color="#fff" />
-        </LoaderContainer>
-      );
-    }
-
-    return (
-      <MeetUpsList
-        data={meetups}
-        keyExtractor={item => String(item.id)}
-        renderItem={({ item }) => (
-          <MeetUpCard
-            meetup={item}
-            mainButtonText="Cancel"
-            onMainButtonPress={() => handleCancelClick(item)}
-          />
-        )}
-        ListEmptyComponent={<EmptySubscriptionList />}
-      />
-    );
   }
 
   return (
     <Background>
-      <Container>{renderSubscriptions()}</Container>
+      <Header />
+      <Container>
+        <List
+          data={subscriptions}
+          keyExtractor={item => String(item.id)}
+          renderItem={({ item }) => (
+            <Meetup
+              onPressAction={() => handleCancellation(item.id)}
+              data={item}
+              buttonDescription="Cancelar Inscrição"
+            />
+          )}
+        />
+      </Container>
     </Background>
   );
 }
 
 Subscriptions.navigationOptions = {
-  title: 'Subscriptions',
+  tabBarLabel: 'Inscrições',
   tabBarIcon: ({ tintColor }) => (
-    <Icon name="playlist-add-check" size={30} color={tintColor} />
+    <Icon name="tag" size={20} color={tintColor} />
   ),
 };
-
-Subscriptions.propTypes = {
-  isFocused: PropTypes.bool.isRequired,
-};
-
-export default withNavigationFocus(Subscriptions);

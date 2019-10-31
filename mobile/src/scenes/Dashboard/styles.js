@@ -1,29 +1,25 @@
-import styled from 'styled-components/native'
+import styled from 'styled-components/native';
 
-export const Container = styled.View`
+export const Container = styled.SafeAreaView`
   flex: 1;
-`
+`;
 
-export const PageTitleContainer = styled.View`
+export const Filter = styled.View`
   flex-direction: row;
-  justify-content: center;
   align-items: center;
-  margin: 20px 0;
-`
+  justify-content: center;
+  margin-top: 30px;
+`;
 
-export const PageTitle = styled.Text`
-  font-weight: bold;
+export const Day = styled.Text`
   font-size: 20px;
   color: #fff;
-  margin: 0 10px;
-`
+  font-weight: bold;
+  align-self: center;
+  margin: 0 20px;
+`;
 
-export const MeetUpsList = styled.FlatList`
-  flex: 1;
-`
-
-export const LoaderContainer = styled.View`
-  flex: 1;
-  justify-content: center;
-  align-items: center;
-`
+export const List = styled.FlatList.attrs({
+  showsVerticalScrollIndicator: false,
+  contentContainerStyle: { padding: 30 },
+})``;

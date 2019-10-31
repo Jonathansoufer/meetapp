@@ -1,166 +1,153 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { withNavigationFocus } from 'react-navigation';
-import { TouchableOpacity, ActivityIndicator } from 'react-native';
-import { format, subDays, addDays, parseISO } from 'date-fns';
-import pt from 'date-fns/locale/pt';
-import PropTypes from 'prop-types';
-
-import { showMessage } from 'react-native-flash-message';
-
+import React, { useEffect, useState } from 'react';
+import { Alert, TouchableOpacity } from 'react-native';
+import { NavigationEvents } from 'react-navigation';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
+import { format, parse, parseISO, addDays, subDays } from 'date-fns';
+import pt from 'date-fns/locale/pt';
 import api from '~/services/api';
-
 import Background from '~/components/Background';
-import MeetUpCard from '~/components/MeetUpCard';
-import EmptyList from './components/EmptyList';
-
-import {
-  Container,
-  MeetUpsList,
-  PageTitleContainer,
-  PageTitle,
-  LoaderContainer,
-} from './styles';
+import Meetup from '~/components/Meetup';
+import Header from '~/components/Header';
+import { Container, Filter, Day, List } from './styles';
 
 Icon.loadFont();
 
-function Dashboard({ isFocused }) {
-  const [meetups, setMeetups] = useState([]);
-  const [date, setDate] = useState(new Date());
+export default function Dashboard({ navigation }) {
   const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const dateFormatted = useMemo(
-    () => format(date, "d 'de' MMMM", { locale: pt }),
-    [date]
+  const [meetups, setMeetups] = useState([]);
+  const [filterDate, setFilterDate] = useState(
+    format(new Date(), 'yyyy-MM-dd')
   );
-
-  function formatMeetUpsDate(noFormattedMeetups) {
-    return noFormattedMeetups.map(meetup => ({
-      ...meetup,
-      formattedDate: format(
-        parseISO(meetup.date_time),
-        "d 'de' MMMM 'de' yyyy 'às' HH:mm",
-        { locale: pt }
-      ),
-    }));
-  }
+  const [needToLoad, setNeedToLoad] = useState(true);
 
   useEffect(() => {
-    async function getMeetups() {
-      setIsLoading(true);
-      const response = await api.get('/meetups/date', {
-        params: {
-          date: date.toISOString(),
-        },
-      });
+    async function loadMeetups() {
+      if (needToLoad) {
+      }
 
-      setMeetups(formatMeetUpsDate(response.data));
-      setIsLoading(false);
+      const [response, subs] = await Promise.all([
+        api.get(`meetups/list?date=${filterDate}&page=${page}`),
+        api.get('subscriptions'),
+      ]);
+
+      if (response.data.length === 0) {
+        if (page === 1) {
+          setMeetups([]);
+        }
+        return;
+      }
+
+      const data = response.data.map(meetup => ({
+        ...meetup,
+        formatedDate: format(
+          parseISO(meetup.date),
+          "dd 'de' MMMMMMMMM', às' H:mm'h'",
+          {
+            locale: pt,
+          }
+        ),
+        userSubscribed:
+          subs.data.filter(sub => sub.id === meetup.id).length > 0,
+      }));
+      if (page === 1) {
+        setMeetups(data);
+      } else {
+        setMeetups(m => [...m, ...data]);
+      }
     }
 
-    if (isFocused) {
-      getMeetups();
-    }
-  }, [date, isFocused]); // eslint-disable-line
+    loadMeetups();
+  }, [filterDate, needToLoad, page]);
 
-  function handlePrevDay() {
-    setDate(subDays(date, 1));
-  }
-
-  function handleNextDay() {
-    setDate(addDays(date, 1));
-  }
-
-  async function handleSubscription({ id, title }) {
+  async function handleSubscription(id) {
     try {
-      await api.post('subscriptions', null, {
-        params: { meetUpId: id },
-      });
-
-      setMeetups(meetups.filter(meetup => meetup.id !== id));
-
-      showMessage({
-        message: `Congratulations, You successful subscribed to ${title} meetup.`,
-        type: 'success',
-      });
+      await api.post(`subscriptions/${id}`);
+      navigation.navigate('Subscriptions');
     } catch (err) {
-      showMessage({
-        message: err.response.data.userMessage,
-        type: 'danger',
-      });
+      Alert.alert('Erro...', err.response.data.error);
     }
   }
 
-  async function loadMoreMeetUps() {
-    const nextPage = page + 1;
-
-    const response = await api.get('/meetups/date', {
-      params: {
-        date: date.toISOString(),
-        page: nextPage,
-      },
-    });
-
-    setMeetups([...meetups, ...formatMeetUpsDate(response.data)]);
-    setPage(nextPage);
-  }
-
-  function renderMeetups() {
-    if (isLoading) {
-      return (
-        <LoaderContainer>
-          <ActivityIndicator size="large" color="#fff" />
-        </LoaderContainer>
-      );
-    }
-
-    return (
-      <MeetUpsList
-        data={meetups}
-        keyExtractor={item => String(item.id)}
-        onEndReachedThreshold={0.2}
-        onEndReached={loadMoreMeetUps}
-        renderItem={({ item }) => (
-          <MeetUpCard
-            meetup={item}
-            onMainButtonPress={() => handleSubscription(item)}
-            mainButtonText="Subscribe"
-          />
-        )}
-        ListEmptyComponent={<EmptyList />}
-      />
+  function onSubDay() {
+    setMeetups([]);
+    setPage(1);
+    setFilterDate(
+      format(
+        subDays(parse(filterDate, 'yyyy-MM-dd', new Date()), 1),
+        'yyyy-MM-dd'
+      )
     );
+  }
+
+  function onAddDay() {
+    setMeetups([]);
+    setPage(1);
+    setFilterDate(
+      format(
+        addDays(parse(filterDate, 'yyyy-MM-dd', new Date()), 1),
+        'yyyy-MM-dd'
+      )
+    );
+  }
+
+  function handleEndReached() {
+    if (meetups.length >= 10) {
+      setPage(page + 1);
+    }
   }
 
   return (
     <Background>
+      <NavigationEvents
+        onWillFocus={() => {
+          if (page > 1) {
+            setPage(1);
+          } else {
+            setNeedToLoad(!needToLoad);
+          }
+        }}
+      />
+      <Header />
       <Container>
-        <PageTitleContainer>
-          <TouchableOpacity onPress={handlePrevDay}>
-            <Icon name="keyboard-arrow-left" size={28} color="#fff" />
+        <Filter>
+          <TouchableOpacity onPress={onSubDay}>
+            <Icon name="chevron-left" size={30} color="#fff" />
           </TouchableOpacity>
-          <PageTitle>{dateFormatted}</PageTitle>
-          <TouchableOpacity onPress={handleNextDay}>
-            <Icon name="keyboard-arrow-right" size={28} color="#fff" />
+          <Day>
+            {format(
+              parse(filterDate, 'yyyy-MM-dd', new Date()),
+              "dd 'de' MMMMMMMMM'",
+              {
+                locale: pt,
+              }
+            )}
+          </Day>
+          <TouchableOpacity onPress={onAddDay}>
+            <Icon name="chevron-right" size={30} color="#fff" />
           </TouchableOpacity>
-        </PageTitleContainer>
-        {renderMeetups()}
+        </Filter>
+        <List
+          data={meetups}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.2}
+          keyExtractor={item => String(item.id)}
+          renderItem={({ item }) => (
+            <Meetup
+              onPressAction={() => handleSubscription(item.id)}
+              data={item}
+              buttonDescription="Realizar Inscrição"
+              subscribed={item.userSubscribed}
+            />
+          )}
+        />
       </Container>
     </Background>
   );
 }
 
 Dashboard.navigationOptions = {
-  title: 'Meetups',
+  tabBarLabel: 'Meetups',
   tabBarIcon: ({ tintColor }) => (
-    <Icon name="event" size={20} color={tintColor} />
+    <Icon name="format-list-bulleted" size={20} color={tintColor} />
   ),
 };
-
-Dashboard.propTypes = {
-  isFocused: PropTypes.bool.isRequired,
-};
-
-export default withNavigationFocus(Dashboard);

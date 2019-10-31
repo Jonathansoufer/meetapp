@@ -64,9 +64,9 @@ class MeetupController {
         ],
       });
 
-      const totalPages = Math.ceil(meetups.count / pageLimit);
+      // const totalPages = Math.ceil(meetups.count / pageLimit);
 
-      return res.status(200).json({ totalPages, meetups });
+      return res.status(200).json({ meetups });
     } catch (err) {
       return res.status(400).json(err);
     }

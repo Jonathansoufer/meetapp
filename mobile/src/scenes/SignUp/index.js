@@ -1,15 +1,11 @@
 import React, { useRef, useState } from 'react';
+import { Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-
-import { showMessage } from 'react-native-flash-message';
-
-import { signUpRequest } from '~/store/modules/auth/actions';
-
 import logo from '~/assets/logo.png';
 
 import Background from '~/components/Background';
-
+import { signUpRequest } from '~/store/modules/auth/actions';
 import {
   Container,
   Form,
@@ -17,39 +13,26 @@ import {
   SubmitButton,
   SignLink,
   SignLinkText,
-  MaImage,
 } from './styles';
 
 export default function SignUp({ navigation }) {
-  const dispatch = useDispatch();
-  const emailRef = useRef();
   const passwordRef = useRef();
-
-  const { loading, failure } = useSelector(state => state.auth);
-
-  const [name, setName] = useState('');
+  const emailRef = useRef();
+  const dispatch = useDispatch();
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
 
-  async function handleSubmit() {
-    if (email && password && name) {
-      await dispatch(signUpRequest(name, email, password));
+  const loading = useSelector(state => state.auth.loading);
 
-      if (!failure) {
-        navigation.navigate('SignIn');
-      }
-    } else {
-      showMessage({
-        message: 'Please check the information provided and try again later.',
-        type: 'warning',
-      });
-    }
+  function handleSubmit() {
+    dispatch(signUpRequest(name, email, password, navigation));
   }
 
   return (
     <Background>
       <Container>
-        <MaImage source={logo} />
+        <Image source={logo} />
         <Form>
           <FormInput
             icon="person-outline"
@@ -66,7 +49,7 @@ export default function SignUp({ navigation }) {
             keyboardType="email-address"
             autoCorrect={false}
             autoCapitalize="none"
-            placeholder="Email Address"
+            placeholder="E-mail Address"
             ref={emailRef}
             returnKeyType="next"
             onSubmitEditing={() => passwordRef.current.focus()}
@@ -88,7 +71,7 @@ export default function SignUp({ navigation }) {
           </SubmitButton>
         </Form>
         <SignLink onPress={() => navigation.navigate('SignIn')}>
-          <SignLinkText>Already registered?</SignLinkText>
+          <SignLinkText>Already have an account?</SignLinkText>
         </SignLink>
       </Container>
     </Background>
@@ -96,7 +79,9 @@ export default function SignUp({ navigation }) {
 }
 
 SignUp.propTypes = {
-  navigation: PropTypes.shape({
-    navigate: PropTypes.func,
-  }).isRequired,
+  navigation: PropTypes.oneOfType([PropTypes.object]),
+};
+
+SignUp.defaultProps = {
+  navigation: {},
 };

@@ -1,19 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
+import Background from '~/components/Background';
 import { updateProfileRequest } from '~/store/modules/user/actions';
 import { signOut } from '~/store/modules/auth/actions';
-
-import Background from '~/components/Background';
+import Header from '~/components/Header';
 
 import {
   Container,
+  Separator,
   Form,
   FormInput,
   SubmitButton,
-  Divisor,
   LogoutButton,
 } from './styles';
 
@@ -21,19 +19,23 @@ Icon.loadFont();
 
 export default function Profile() {
   const dispatch = useDispatch();
+  const profile = useSelector(state => state.user.profile);
 
   const emailRef = useRef();
   const oldPasswordRef = useRef();
   const passwordRef = useRef();
-  const passwordConfirmationRef = useRef();
-
-  const user = useSelector(state => state.user.profile);
-
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
+  const confirmPasswordRef = useRef();
+  const [name, setName] = useState(profile.name);
+  const [email, setEmail] = useState(profile.email);
   const [oldPassword, setOldPassword] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  useEffect(() => {
+    setOldPassword('');
+    setPassword('');
+    setConfirmPassword('');
+  }, [profile]);
 
   function handleSubmit() {
     dispatch(
@@ -42,20 +44,25 @@ export default function Profile() {
         email,
         oldPassword,
         password,
-        passwordConfirmation,
+        confirmPassword,
       })
     );
   }
 
+  function handleLogout() {
+    dispatch(signOut());
+  }
+
   return (
     <Background>
+      <Header />
       <Container>
         <Form>
           <FormInput
             icon="person-outline"
             autoCorrect={false}
             autoCapitalize="none"
-            placeholder="Full Name"
+            placeholder="Nome completo"
             returnKeyType="next"
             onSubmitEditing={() => emailRef.current.focus()}
             value={name}
@@ -66,20 +73,19 @@ export default function Profile() {
             keyboardType="email-address"
             autoCorrect={false}
             autoCapitalize="none"
-            placeholder="Email address"
+            placeholder="Digite seu e-mail"
             ref={emailRef}
             returnKeyType="next"
             onSubmitEditing={() => oldPasswordRef.current.focus()}
             value={email}
             onChangeText={setEmail}
           />
-
-          <Divisor />
+          <Separator />
 
           <FormInput
             icon="lock-outline"
             secureTextEntry
-            placeholder="Current Password"
+            placeholder="Senha atual"
             ref={oldPasswordRef}
             returnKeyType="next"
             onSubmitEditing={() => passwordRef.current.focus()}
@@ -89,33 +95,33 @@ export default function Profile() {
           <FormInput
             icon="lock-outline"
             secureTextEntry
-            placeholder="New Password"
+            placeholder="Nova senha"
             ref={passwordRef}
             returnKeyType="next"
-            oonSubmitEditing={() => passwordConfirmationRef.current.focus()}
+            onSubmitEditing={() => confirmPasswordRef.current.focus()}
             value={password}
             onChangeText={setPassword}
           />
           <FormInput
             icon="lock-outline"
             secureTextEntry
-            placeholder="Confirm your Password"
-            ref={passwordConfirmationRef}
+            placeholder="Confirmação de senha"
+            ref={confirmPasswordRef}
             returnKeyType="send"
             onSubmitEditing={handleSubmit}
-            value={passwordConfirmation}
-            onChangeText={setPasswordConfirmation}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
-          <SubmitButton onPress={handleSubmit}>Update</SubmitButton>
+          <SubmitButton onPress={handleSubmit}>Salvar Perfil</SubmitButton>
+          <LogoutButton onPress={handleLogout}>Sair do Meetapp</LogoutButton>
         </Form>
-        <LogoutButton onPress={() => dispatch(signOut())}>Exit</LogoutButton>
       </Container>
     </Background>
   );
 }
 
 Profile.navigationOptions = {
-  title: 'Profile',
+  tabBarLabel: 'Meu Perfil',
   tabBarIcon: ({ tintColor }) => (
     <Icon name="person" size={20} color={tintColor} />
   ),
