@@ -1,11 +1,13 @@
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 
-import SignIn from './scenes/SignIn';
-import SignUp from './scenes/SignUp';
-import Dashboard from './scenes/Dashboard';
-import Subscriptions from './scenes/Subscriptions';
-import Profile from './scenes/Profile';
+import SignIn from './screens/SignIn';
+import SignUp from './screens/SignUp';
+
+import Dashboard from './screens/Dashboard';
+import Registration from './screens/Registration';
+
+import Profile from './screens/Profile';
 
 export default (isSigned = false) =>
   createAppContainer(
@@ -18,22 +20,18 @@ export default (isSigned = false) =>
         App: createBottomTabNavigator(
           {
             Dashboard,
-            Subscriptions,
+            Registration,
             Profile,
           },
           {
+            resetOnBlur: true,
             tabBarOptions: {
               keyboardHidesTabBar: true,
               activeTintColor: '#fff',
-              inactiveTintColor: 'rgba(255,255,255,0.6)',
-              labelStyle: {
-                fontSize: 14,
-              },
+              inactiveTintColor: 'rgba(255, 255, 255, 0.6)',
               style: {
-                borderTopWidth: 0,
-                height: 60,
-                padding: 5,
-                backgroundColor: '#2b1a2f',
+                borderTopColor: '#2B1A2F',
+                backgroundColor: '#2B1A2F',
               },
             },
           }
