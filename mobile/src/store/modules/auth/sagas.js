@@ -19,7 +19,7 @@ export function* signIn({ payload }) {
   } catch (err) {
     showMessage({
       message: 'Login',
-      description: 'Falha na autenticação, verifique seu email/senha',
+      description: 'Authentication failed. Please try again later.',
       type: 'danger',
     });
 
@@ -38,14 +38,15 @@ export function* signUp({ payload }) {
       provider: true,
     });
     showMessage({
-      message: 'Cadastro de Usuário',
-      description: 'Usuário cadastrado com sucesso',
+      message: 'Sign Up',
+      description: 'User successful registered.',
       type: 'success',
     });
   } catch (err) {
     showMessage({
-      message: 'Cadastro de Usuário',
-      description: 'Falha no cadastro, verifique seus dados',
+      message: 'Sign Up Error',
+      description:
+        'User cannot be registered at this time. Please try again later.',
       type: 'danger',
     });
     yield put(signFailure());
@@ -63,7 +64,7 @@ export function setToken({ payload }) {
 export function signOut() {
   showMessage({
     type: 'MeetApp',
-    message: 'Volte sempre!',
+    message: 'Thanks!',
   });
 }
 

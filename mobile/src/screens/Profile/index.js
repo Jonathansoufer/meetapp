@@ -63,7 +63,7 @@ export default function Profile() {
             icon="person-outline"
             autoCorrect={false}
             autoCapitalize="none"
-            placeholder="Nome completo"
+            placeholder="Full Name"
             returnKeyType="next"
             onSubmitEditing={() => emailRef.current.focus()}
             value={name}
@@ -75,7 +75,7 @@ export default function Profile() {
             keyboardType="email-address"
             autoCorrect={false}
             autoCapitalize="none"
-            placeholder="Digite seu e-mail"
+            placeholder="E-Mail address"
             ref={emailRef}
             returnKeyType="next"
             onSubmitEditing={() => oldPasswordRef.current.focus()}
@@ -88,7 +88,7 @@ export default function Profile() {
           <FormInput
             icon="lock-outline"
             secureTextEntry
-            placeholder="Senha atual"
+            placeholder="Current Password"
             ref={oldPasswordRef}
             returnKeyType="next"
             onSubmitEditing={() => passwordRef.current.focus()}
@@ -99,7 +99,7 @@ export default function Profile() {
           <FormInput
             icon="lock-outline"
             secureTextEntry
-            placeholder="Nova senha"
+            placeholder="New Password"
             ref={passwordRef}
             returnKeyType="next"
             onSubmitEditing={() => confirmPasswordRef.current.focus()}
@@ -110,7 +110,7 @@ export default function Profile() {
           <FormInput
             icon="lock-outline"
             secureTextEntry
-            placeholder="Confirmação de senha"
+            placeholder="Confirm Password"
             ref={confirmPasswordRef}
             returnKeyType="send"
             onSubmitEditing={handleSubmit}
@@ -118,8 +118,8 @@ export default function Profile() {
             onChangeText={setConfirmPassword}
           />
 
-          <SubmitButton onPress={handleSubmit}>Salvar perfil</SubmitButton>
-          <LogoutButton onPress={handleLogout}>Sair do Meetup</LogoutButton>
+          <SubmitButton onPress={handleSubmit}>Update</SubmitButton>
+          <LogoutButton onPress={handleLogout}>Sign Out</LogoutButton>
         </Form>
       </Container>
     </Background>
@@ -127,7 +127,7 @@ export default function Profile() {
 }
 
 Profile.navigationOptions = {
-  tabBarLabel: 'Meu perfil',
+  tabBarLabel: 'Profile',
   tabBarIcon: ({ tintColor }) => (
     <Icon name="person" size={24} color={tintColor} />
   ),

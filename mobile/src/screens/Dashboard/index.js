@@ -16,23 +16,6 @@ import Card from '~/components/Card';
 
 import { Container, DateContainer, DateLabel, List, Button } from './styles';
 
-const styles = StyleSheet.create({
-  list: {
-    paddingHorizontal: 20,
-  },
-
-  listItem: {
-    backgroundColor: '#EEE',
-    marginTop: 20,
-    padding: 30,
-  },
-
-  loading: {
-    alignSelf: 'center',
-    marginVertical: 20,
-  },
-});
-
 Icon.loadFont();
 
 function Dashboard({ isFocused }) {
@@ -43,17 +26,14 @@ function Dashboard({ isFocused }) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  async function loadMeetups(pageNumber = page, shouldRefresh = false) {
-    if (!hasMore) return;
-    if (loading) return;
-
+  async function loadMeetups(pageNumber = page) {
     setLoading(true);
 
     const response = await api.get('meetups', {
       params: { date, page },
     });
 
-    if (response.length >= 1) {
+    if (response.length > 0) {
       const data = response.data.map(meet => {
         return {
           ...meet,
@@ -62,18 +42,17 @@ function Dashboard({ isFocused }) {
           }),
         };
       });
-      setMeetups(shouldRefresh ? data : [...meetups, ...data]);
+
+      setMeetups(...data);
     }
     setLoading(false);
-
-    // setHasMore(data.length >= 5);
-    // setPage(pageNumber + 1);
   }
+
   async function refreshList() {
     setPage(1);
     setRefreshing(true);
 
-    await loadMeetups(1, true);
+    await loadMeetups();
 
     setRefreshing(false);
   }
@@ -112,12 +91,12 @@ function Dashboard({ isFocused }) {
 
       showMessage({
         message: 'Meetups',
-        description: `Inscrição realizada com sucesso`,
+        description: `Successful subscribed!`,
         type: 'success',
       });
     } catch (error) {
       showMessage({
-        message: 'Falha na inscrição',
+        message: 'Not subscribed. Please try again.',
         description: `${error.response.data.error}`,
         type: 'danger',
       });
@@ -154,7 +133,7 @@ function Dashboard({ isFocused }) {
             ListFooterComponent={() => renderFooter()}
           />
         ) : (
-          !loading && <Empty message="Sem eventos nessa data!" />
+          !loading && <Empty message="No Meetups available today!" />
         )}
       </Container>
     </Background>
@@ -177,3 +156,20 @@ Dashboard.propTypes = {
 Dashboard.defaultProps = {
   isFocused: false,
 };
+
+const styles = StyleSheet.create({
+  list: {
+    paddingHorizontal: 20,
+  },
+
+  listItem: {
+    backgroundColor: '#EEE',
+    marginTop: 20,
+    padding: 30,
+  },
+
+  loading: {
+    alignSelf: 'center',
+    marginVertical: 20,
+  },
+});

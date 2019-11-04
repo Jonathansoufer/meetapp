@@ -15,16 +15,16 @@ export function* updateProfile({ payload }) {
     const response = yield call(api.put, 'users', profile);
 
     showMessage({
-      message: 'Perfil',
-      description: 'Perfil atualizado com sucesso',
+      message: 'Profile',
+      description: 'Profile successful updated.',
       type: 'success',
     });
 
     yield put(updateProfileSuccess(response.data));
   } catch (error) {
     showMessage({
-      message: 'Perfil',
-      description: 'Erro ao atualizar Perfil',
+      message: 'Profile',
+      description: 'Error updating your Profile. Please try again later.',
       type: 'danger',
     });
     yield put(updateProfilefailure());
